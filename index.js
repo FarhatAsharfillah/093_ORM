@@ -7,19 +7,16 @@ app.use(express.urlencoded({
     extended: true 
 }));
 
-app.listen(PORT, async () => {
-    console.log(`Server is running on port 3000`);
-});
+
 
 db.sequelize.sync()
-    .then(() => {
-        app.listen(3000, () => {
-            console.log('Database synced and server is running on port 3000');
-        })
-    })
-    .catch((err) => {
-        console.error('Failed to sync database:', err);
+  .then(() => {
+    console.log('Database synced successfully');
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
     });
+  })
+  .catch(err => console.error('Failed to sync database:', err));
 
 app.post('/komik', async (req, res) => {
     const data = req.body;
@@ -27,8 +24,9 @@ app.post('/komik', async (req, res) => {
         const komik = await db.Komik.create(data);
         res.send(komik);
     } catch (err) {
-        res.send(err);
-    }
+    console.error(err);
+    res.status(500).send({ error: err.message });
+}
 });
 
 app.get('/komik', async (req, res) => {
@@ -36,8 +34,9 @@ app.get('/komik', async (req, res) => {
         const komik = await db.Komik.findAll();
         res.send(komik);
     } catch (err) {
-        res.send(err);
-    }
+    console.error(err);
+    res.status(500).send({ error: err.message });
+}
 });
 
 app.put('/komik/:id', async (req, res) => {
@@ -46,15 +45,16 @@ app.put('/komik/:id', async (req, res) => {
 
     try {
         const komik = await db.Komik.findByPk(id);
-        if (komik) {
+        if (!komik) {
             return res.status(404).send({ message: 'Komik not found' });
         }
 
         await komik.update(data);
         res.send({ message: 'Komik updated successfully', komik });
     } catch (err) {
-        res.status(500).send(err);
-    }
+    console.error(err);
+    res.status(500).send({ error: err.message });
+}
 });
 
 app.delete('/komik/:id', async (req, res) => {
@@ -68,6 +68,7 @@ app.delete('/komik/:id', async (req, res) => {
         await komik.destroy();
         res.send({ message: 'Komik deleted successfully' });
     } catch (err) {
-        res.status(500).send(err);
-    }
+    console.error(err);
+    res.status(500).send({ error: err.message });
+}
 });
